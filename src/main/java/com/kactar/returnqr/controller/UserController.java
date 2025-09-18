@@ -15,11 +15,11 @@ public class UserController {
         return users;
     }
 
-    @PostMapping
-    public String createUser(@RequestBody User user){
-        users.add(user);
-        return "Dodano użytkownika: " + user.getName();
-    }
+//    @PostMapping
+//    public String createUser(@RequestBody User user){
+//        users.add(user);
+//        return "Dodano użytkownika: " + user.getName();
+//    }
 
     @GetMapping("/{index}")
     public User getUserByIndex(@PathVariable int index){
