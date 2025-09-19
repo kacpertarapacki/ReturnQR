@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>ReturnQR – Panel testowy</title>
+</head>
+<body>
+<h1>ReturnQR – Panel testowy</h1>
+
+<!-- USER SECTION -->
+<h2>Użytkownicy</h2>
+<form id="userForm">
+    <input type="text" id="name" placeholder="Imię i nazwisko" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <button type="submit">➕ Dodaj użytkownika</button>
+</form>
+
+<button onclick="loadUsers()">📋 Pokaż użytkowników</button>
+<ul id="usersList"></ul>
+
+<h3>Usuń użytkownika</h3>
+<input type="number" id="deleteUserId" placeholder="User ID">
+<button onclick="deleteUser()">🗑️ Usuń użytkownika</button>
+
+<hr>
+
+<!-- PARCEL SECTION -->
+<h2>Paczki</h2>
+<form id="parcelForm">
+    <input type="number" id="userId" placeholder="User ID (właściciel)" required>
+    <input type="text" id="deliveryAddress" placeholder="Adres dostawy" required>
+    <input type="text" id="returnAddress" placeholder="Adres zwrotu" required>
+    <select id="status">
+        <option value="SENT">SENT</option>
+        <option value="RETURN">RETURN</option>
+    </select>
+    <button type="submit">➕ Dodaj paczkę</button>
+</form>
+
+<h3>Pobierz paczkę</h3>
+<input type="number" id="parcelId" placeholder="Parcel ID">
+<button onclick="loadParcel()">📦 Pokaż paczkę</button>
+<pre id="parcelDetails"></pre>
+
+<h3>Zmień status paczki</h3>
+<input type="number" id="parcelIdStatus" placeholder="Parcel ID">
+<select id="newStatus">
+    <option value="SENT">SENT</option>
+    <option value="RETURN">RETURN</option>
+</select>
+<button onclick="updateStatus()">🔄 Zmień status</button>
+
+<h3>Usuń paczkę</h3>
+<input type="number" id="deleteParcelId" placeholder="Parcel ID">
+<button onclick="deleteParcel()">🗑️ Usuń paczkę</button>
+
+<script>
+    const apiUrl = "http://localhost:8080";
+
+    // ➕ Dodaj usera
+    document.getElementById("userForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const user = {
+            name: document.getElementById("name").value,
+            email: document.getElementById("email").value
+        };
+        const res = await fetch(`${apiUrl}/users`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(user)
+        });
+        alert("Dodano usera: " + res.status);
+    });
+
+    // 📋 Pobierz userów
+    async function loadUsers() {
+        const res = await fetch(`${apiUrl}/users`);
+        const users = await res.json();
+        const list = document.getElementById("usersList");
+        list.innerHTML = "";
+        users.forEach(u => {
+            const li = document.createElement("li");
+            li.textContent = `${u.id}: ${u.name} (${u.email})`;
+            list.appendChild(li);
+        });
+    }
+
+    // 🗑️ Usuń usera
+    async function deleteUser() {
+        const id = document.getElementById("deleteUserId").value;
+        const res = await fetch(`${apiUrl}/users/${id}`, { method: "DELETE" });
+        alert("Usunięcie usera: " + res.status);
+    }
+
+    // ➕ Dodaj paczkę
+    document.getElementById("parcelForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const userId = document.getElementById("userId").value;
+        const parcel = {
+            deliveryAddress: document.getElementById("deliveryAddress").value,
+            returnAddress: document.getElementById("returnAddress").value,
+            parcelStatus: document.getElementById("status").value
+        };
+        const res = await fetch(`${apiUrl}/users/${userId}/parcels`, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(parcel)
+        });
+        alert("Dodano paczkę: " + res.status);
+    });
+
+    // 📦 Pobierz paczkę
+    async function loadParcel() {
+        const id = document.getElementById("parcelId").value;
+        const res = await fetch(`${apiUrl}/parcels/${id}`);
+        if (res.status === 404) {
+            document.getElementById("parcelDetails").textContent = "Nie znaleziono paczki";
+            return;
+        }
+        const parcel = await res.json();
+        document.getElementById("parcelDetails").textContent = JSON.stringify(parcel, null, 2);
+    }
+
+    // 🔄 Zmień status paczki
+    async function updateStatus() {
+        const id = document.getElementById("parcelIdStatus").value;
+        const status = document.getElementById("newStatus").value;
+
+        const res = await fetch(`${apiUrl}/parcels/${id}/status?status=${status}`, {
+            method: "PUT"
+        });
+        alert("Zmiana statusu: " + res.status);
+    }
+
+    // 🗑️ Usuń paczkę
+    async function deleteParcel() {
+        const id = document.getElementById("deleteParcelId").value;
+        const res = await fetch(`${apiUrl}/parcels/${id}`, { method: "DELETE" });
+        alert("Usunięcie paczki: " + res.status);
+    }
+</script>
+</body>
+</html>

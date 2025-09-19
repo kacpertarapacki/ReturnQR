@@ -1,8 +1,11 @@
 package com.kactar.returnqr.service;
 
+import com.kactar.returnqr.dto.UserDto;
 import com.kactar.returnqr.model.User;
 import com.kactar.returnqr.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -19,14 +22,20 @@ public class UserService {
     }
 
     public User getUserById(Long id){
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        return userRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"User not found"));
     }
 
-    public List<User> getAllUsers(){
-        return userRepository.findAll();
+    public List<UserDto> getAllUsers(){
+        return userRepository.findAll().
+                stream()
+                .map(user -> new UserDto(user.getId(), user.getName(), user.getEmail()))
+                .toList();
     }
 
     public void deleteUser(Long id){
+        if (!userRepository.existsById(id)){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
         userRepository.deleteById(id);
     }
 }

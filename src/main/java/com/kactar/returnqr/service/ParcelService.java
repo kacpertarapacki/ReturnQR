@@ -5,7 +5,9 @@ import com.kactar.returnqr.model.ParcelStatus;
 import com.kactar.returnqr.model.User;
 import com.kactar.returnqr.repository.ParcelRepository;
 import com.kactar.returnqr.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ParcelService {
@@ -18,21 +20,28 @@ public class ParcelService {
     }
 
     public Parcel addParcelToUser(Long id, Parcel parcel){
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         parcel.setUser(user);
         return parcelRepository.save(parcel);
     }
 
     public Parcel getParcelById(Long id){
-        return parcelRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        return parcelRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parcel not found"));
     }
 
-    public void updateParcelStatus(Long id, ParcelStatus parcelStatus){
-        parcelRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found")).setParcelStatus(parcelStatus);
+    public void updateParcelStatus(Long id){
+        parcelRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parcel not found")).setParcelStatus(ParcelStatus.RETURN);
     }
+
     public void deleteParcel(Long id){
+        if (!parcelRepository.existsById(id)){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Parcel not found");
+        }
         parcelRepository.deleteById(id);
     }
 
-
+    public String prepareForQrGenerator(Long id){
+        Parcel parcel = parcelRepository.findById(id).orElseThrow(() ->new ResponseStatusException(HttpStatus.NOT_FOUND, "Parcel not found"));
+        return "name: " + parcel.getUser().getName() + ", return address: " + parcel.getReturnAddress();
+    }
 }
