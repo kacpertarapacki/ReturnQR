@@ -1,4 +1,6 @@
 package com.kactar.returnqr.dto;
 
-public record UserDto(Long id, String name, String email) {
+import com.kactar.returnqr.model.UserRole;
+
+public record UserDto(Long id, String name, String email, UserRole userRole) {
 }

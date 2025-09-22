@@ -17,9 +17,11 @@ import java.util.List;
 @AllArgsConstructor
 public class User {
 
-    public User(String name, String email) {
+    public User(String name, String email, String password, UserRole userRole) {
         this.name = name;
         this.email = email;
+        this.password = password;
+        this.userRole = userRole;
     }
 
     @Id
@@ -28,9 +30,19 @@ public class User {
 
     @NotBlank
     private String name;
+
     @Email
     @NotBlank
+    @Column(nullable = false, unique = true)
     private String email;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserRole userRole;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Parcel> parcels = new ArrayList<>();

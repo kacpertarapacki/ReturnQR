@@ -26,17 +26,17 @@ public class UserController {
         this.parcelService = parcelService;
     }
 
-    @PostMapping
-    public ResponseEntity<User> createUser(@Valid @RequestBody User user){
-        User savedUser = userService.createNewUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
-    }
+//    @PostMapping
+//    public ResponseEntity<User> createUser(@Valid @RequestBody User user){
+//        User savedUser = userService.createNewUser(user);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+//    }
 
-    @GetMapping
-    public ResponseEntity<List<UserDto>> getUsers(){
-        List<UserDto> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
-    }
+//    @GetMapping
+//    public ResponseEntity<List<UserDto>> getUsers(){
+//        List<UserDto> users = userService.getAllUsers();
+//        return ResponseEntity.ok(users);
+//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUser(@PathVariable Long id){
