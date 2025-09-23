@@ -1,143 +1,442 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="UTF-8">
-    <title>ReturnQR – Panel testowy</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ReturnQR — Panel paczek</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html, body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; }
+        .glass { background: rgba(255,255,255,0.7); backdrop-filter: blur(8px); }
+        .brand-gradient { background-image: linear-gradient(135deg, rgba(59,130,246,1) 0%, rgba(99,102,241,1) 50%, rgba(236,72,153,1) 100%); }
+    </style>
 </head>
-<body>
-<h1>ReturnQR – Panel testowy</h1>
+<body class="min-h-screen bg-slate-50">
+<!-- Topbar -->
+<header class="brand-gradient text-white">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h18v2H3V3zm0 4h18v8H3V7zm0 10h18v2H3v-2z"/></svg>
+            <h1 class="text-xl font-semibold tracking-tight">ReturnQR</h1>
+        </div>
+        <div id="userBadge" class="hidden items-center gap-3">
+            <span id="whoami" class="text-sm/6 opacity-90"></span>
+            <button id="logoutBtn" class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-sm font-medium">Wyloguj</button>
+        </div>
+    </div>
+</header>
 
-<!-- USER SECTION -->
-<h2>Użytkownicy</h2>
-<form id="userForm">
-    <input type="text" id="name" placeholder="Imię i nazwisko" required>
-    <input type="email" id="email" placeholder="Email" required>
-    <button type="submit">➕ Dodaj użytkownika</button>
-</form>
+<!-- Container -->
+<main class="max-w-6xl mx-auto px-4 py-8">
+    <div id="alerts" class="space-y-3"></div>
 
-<button onclick="loadUsers()">📋 Pokaż użytkowników</button>
-<ul id="usersList"></ul>
+    <!-- Auth card -->
+    <section id="authCard" class="glass shadow-lg rounded-2xl p-6 mt-6">
+        <h2 class="text-2xl font-semibold mb-1">Zaloguj się</h2>
+        <p class="text-slate-600 mb-6">Użyj danych konta, aby zarządzać paczkami. Nie masz konta? <button class="text-indigo-600 hover:underline" id="switchToRegister">Zarejestruj się</button></p>
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Login -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Email</label>
+                    <input id="loginEmail" type="email" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="you@example.com"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Hasło</label>
+                    <input id="loginPassword" type="password" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="••••••••"/>
+                </div>
+                <button id="loginBtn" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Zaloguj</button>
+            </div>
 
-<h3>Usuń użytkownika</h3>
-<input type="number" id="deleteUserId" placeholder="User ID">
-<button onclick="deleteUser()">🗑️ Usuń użytkownika</button>
+            <!-- Register -->
+            <div id="registerPane" class="hidden space-y-4">
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Imię (wyświetlane)</label>
+                        <input id="regName" type="text" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="Jan Kowalski"/>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email</label>
+                        <input id="regEmail" type="email" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="you@example.com"/>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Hasło</label>
+                        <input id="regPassword" type="password" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="Min. 6 znaków"/>
+                    </div>
+                </div>
+                <button id="registerBtn" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white font-semibold">Utwórz konto</button>
+            </div>
+        </div>
+        <div class="mt-6">
+            <details class="group">
+                <summary class="cursor-pointer select-none text-sm text-slate-600 hover:text-slate-800 flex items-center gap-2">
+                    <span>Zaawansowane: ustawienia API</span>
+                    <svg class="h-4 w-4 opacity-70 group-open:rotate-180 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.7a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
+                </summary>
+                <div class="mt-3 grid sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Base URL</label>
+                        <input id="apiBase" class="w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500" value="/api"/>
+                        <p class="text-xs text-slate-500 mt-1">Zwykle <code>/api</code></p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Auth Prefix</label>
+                        <input id="authPrefix" class="w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500" value="/auth"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1">Parcels Prefix</label>
+                        <input id="parcelsPrefix" class="w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500" value="/parcels"/>
+                    </div>
+                </div>
+            </details>
+        </div>
+    </section>
 
-<hr>
+    <!-- Dashboard -->
+    <section id="dashboard" class="hidden mt-8 space-y-6">
+        <!-- Actions -->
+        <div class="grid lg:grid-cols-3 gap-6">
+            <div class="glass rounded-2xl p-6 shadow">
+                <h3 class="text-lg font-semibold mb-4">Dodaj paczkę</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Adres dostawy</label>
+                        <input id="deliveryAddress" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="ul. Przykładowa 1, 00-001 Warszawa"/>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Adres zwrotu</label>
+                        <input id="returnAddress" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="ul. Zwrotna 2, 00-002 Warszawa"/>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Status</label>
+                        <select id="parcelStatus" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="SENT">SENT</option>
+                            <option value="RETURN">RETURN</option>
+                        </select>
+                    </div>
+                    <button id="addParcelBtn" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Dodaj</button>
+                </div>
+            </div>
 
-<!-- PARCEL SECTION -->
-<h2>Paczki</h2>
-<form id="parcelForm">
-    <input type="number" id="userId" placeholder="User ID (właściciel)" required>
-    <input type="text" id="deliveryAddress" placeholder="Adres dostawy" required>
-    <input type="text" id="returnAddress" placeholder="Adres zwrotu" required>
-    <select id="status">
-        <option value="SENT">SENT</option>
-        <option value="RETURN">RETURN</option>
-    </select>
-    <button type="submit">➕ Dodaj paczkę</button>
-</form>
+            <div class="glass rounded-2xl p-6 shadow lg:col-span-2">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Twoje paczki</h3>
+                    <div class="flex items-center gap-2">
+                        <input id="searchInput" placeholder="Szukaj adresu..." class="rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 px-3 py-1.5">
+                        <button id="refreshBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-black text-white text-sm">Odśwież</button>
+                    </div>
+                </div>
+                <div class="overflow-hidden rounded-xl border border-slate-200">
+                    <table class="min-w-full divide-y divide-slate-200">
+                        <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">ID</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">Dostawa</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">Zwrot</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">Status</th>
+                            <th class="px-4 py-2 text-right text-xs font-semibold text-slate-600">Akcje</th>
+                        </tr>
+                        </thead>
+                        <tbody id="parcelsTbody" class="divide-y divide-slate-200 bg-white"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
 
-<h3>Pobierz paczkę</h3>
-<input type="number" id="parcelId" placeholder="Parcel ID">
-<button onclick="loadParcel()">📦 Pokaż paczkę</button>
-<pre id="parcelDetails"></pre>
-
-<h3>Zmień status paczki</h3>
-<input type="number" id="parcelIdStatus" placeholder="Parcel ID">
-<select id="newStatus">
-    <option value="SENT">SENT</option>
-    <option value="RETURN">RETURN</option>
-</select>
-<button onclick="updateStatus()">🔄 Zmień status</button>
-
-<h3>Usuń paczkę</h3>
-<input type="number" id="deleteParcelId" placeholder="Parcel ID">
-<button onclick="deleteParcel()">🗑️ Usuń paczkę</button>
+<!-- QR Modal -->
+<div id="qrModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">
+        <button id="closeQr" class="absolute top-3 right-3 p-2 rounded-full hover:bg-slate-100">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M6.4 4.98L4.98 6.4 10.58 12l-5.6 5.6 1.42 1.42L12 13.42l5.6 5.6 1.42-1.42L13.42 12l5.6-5.6-1.42-1.42L12 10.58z"/></svg>
+        </button>
+        <h3 class="text-lg font-semibold mb-4">Kod QR paczki</h3>
+        <img id="qrImage" alt="QR" class="w-full rounded-lg border border-slate-200">
+    </div>
+</div>
 
 <script>
-    const apiUrl = "http://localhost:8080";
+    // --- Helpers ---
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+    const show = (el) => el.classList.remove('hidden');
+    const hide = (el) => el.classList.add('hidden');
 
-    // ➕ Dodaj usera
-    document.getElementById("userForm").addEventListener("submit", async e => {
-        e.preventDefault();
-        const user = {
-            name: document.getElementById("name").value,
-            email: document.getElementById("email").value
-        };
-        const res = await fetch(`${apiUrl}/users`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(user)
-        });
-        alert("Dodano usera: " + res.status);
-    });
-
-    // 📋 Pobierz userów
-    async function loadUsers() {
-        const res = await fetch(`${apiUrl}/users`);
-        const users = await res.json();
-        const list = document.getElementById("usersList");
-        list.innerHTML = "";
-        users.forEach(u => {
-            const li = document.createElement("li");
-            li.textContent = `${u.id}: ${u.name} (${u.email})`;
-            list.appendChild(li);
-        });
+    function flash(type, text) {
+        const color = type === 'error' ? 'bg-rose-100 text-rose-800 border-rose-200' :
+            type === 'warn' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                'bg-emerald-100 text-emerald-800 border-emerald-200';
+        const box = document.createElement('div');
+        box.className = `rounded-xl border ${color} px-4 py-3`;
+        box.textContent = text;
+        $('#alerts').prepend(box);
+        setTimeout(() => box.remove(), 4500);
     }
 
-    // 🗑️ Usuń usera
-    async function deleteUser() {
-        const id = document.getElementById("deleteUserId").value;
-        const res = await fetch(`${apiUrl}/users/${id}`, { method: "DELETE" });
-        alert("Usunięcie usera: " + res.status);
+    // --- API Config ---
+    const state = {
+        token: null,
+        tokenType: 'Bearer',
+        expiresAt: null,
+        base() { return ($('#apiBase').value || '/api').replace(/\/+$/,''); },
+        pathAuth() { return ($('#authPrefix').value || '/auth'); },
+        pathParcels() { return ($('#parcelsPrefix').value || '/parcels'); },
+        get authUrl() { return this.base() + this.pathAuth(); },
+        get parcelsUrl() { return this.base() + this.pathParcels(); },
+        whoami: null,
+    };
+
+    function authHeaders(extra = {}) {
+        const headers = { 'Content-Type': 'application/json', ...extra };
+        if (state.token) headers['Authorization'] = `${state.tokenType} ${state.token}`;
+        return headers;
     }
 
-    // ➕ Dodaj paczkę
-    document.getElementById("parcelForm").addEventListener("submit", async e => {
-        e.preventDefault();
-        const userId = document.getElementById("userId").value;
-        const parcel = {
-            deliveryAddress: document.getElementById("deliveryAddress").value,
-            returnAddress: document.getElementById("returnAddress").value,
-            parcelStatus: document.getElementById("status").value
-        };
-        const res = await fetch(`${apiUrl}/users/${userId}/parcels`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(parcel)
-        });
-        alert("Dodano paczkę: " + res.status);
-    });
-
-    // 📦 Pobierz paczkę
-    async function loadParcel() {
-        const id = document.getElementById("parcelId").value;
-        const res = await fetch(`${apiUrl}/parcels/${id}`);
-        if (res.status === 404) {
-            document.getElementById("parcelDetails").textContent = "Nie znaleziono paczki";
-            return;
+    async function apiJson(url, options = {}) {
+        const res = await fetch(url, options);
+        if (!res.ok) {
+            let msg = `Błąd ${res.status}`;
+            try { const j = await res.json(); msg += j.message ? `: ${j.message}` : ''; } catch {}
+            throw new Error(msg);
         }
-        const parcel = await res.json();
-        document.getElementById("parcelDetails").textContent = JSON.stringify(parcel, null, 2);
+        const ct = res.headers.get('content-type') || '';
+        return ct.includes('application/json') ? res.json() : res.text();
     }
 
-    // 🔄 Zmień status paczki
-    async function updateStatus() {
-        const id = document.getElementById("parcelIdStatus").value;
-        const status = document.getElementById("newStatus").value;
+    function renderAuthedUI() {
+        hide($('#authCard'));
+        show($('#dashboard'));
+        show($('#userBadge'));
+        $('#whoami').textContent = state.whoami || 'Zalogowano';
+    }
 
-        const res = await fetch(`${apiUrl}/parcels/${id}/status?status=${status}`, {
-            method: "PUT"
+    function resetUI() {
+        show($('#authCard'));
+        hide($('#dashboard'));
+        hide($('#userBadge'));
+        $('#whoami').textContent = '';
+        $('#parcelsTbody').innerHTML = '';
+    }
+
+    // --- Auth ---
+    $('#switchToRegister').addEventListener('click', () => {
+        const pane = $('#registerPane');
+        pane.classList.toggle('hidden');
+    });
+
+    $('#loginBtn').addEventListener('click', async () => {
+        const email = $('#loginEmail').value.trim();
+        const password = $('#loginPassword').value;
+        if (!email || !password) return flash('warn', 'Podaj email i hasło.');
+        try {
+            const body = JSON.stringify({ email, password });
+            const data = await apiJson(`${state.authUrl}/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body
+            });
+            state.token = data.accessToken || data.token || null;
+            state.tokenType = data.tokenType || 'Bearer';
+            state.expiresAt = data.expiresAt || null;
+            state.whoami = `Rola: ${data.role || 'USER'}`;
+            flash('ok', 'Zalogowano pomyślnie.');
+            renderAuthedUI();
+            await loadParcels();
+        } catch (e) {
+            flash('error', 'Logowanie nieudane. ' + e.message);
+        }
+    });
+
+    $('#registerBtn').addEventListener('click', async () => {
+        const name = $('#regName').value.trim();
+        const email = $('#regEmail').value.trim();
+        const password = $('#regPassword').value;
+        if (!name || !email || !password) return flash('warn', 'Wypełnij wszystkie pola rejestracji.');
+        try {
+            const body = JSON.stringify({ name, email, password });
+            const data = await apiJson(`${state.authUrl}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body
+            });
+            flash('ok', 'Konto utworzone. Możesz się zalogować.');
+            // Prefill login
+            $('#loginEmail').value = email;
+            hide($('#registerPane'));
+        } catch (e) {
+            flash('error', 'Rejestracja nieudana. ' + e.message);
+        }
+    });
+
+    $('#logoutBtn').addEventListener('click', () => {
+        state.token = null;
+        state.whoami = null;
+        resetUI();
+        flash('ok', 'Wylogowano.');
+    });
+
+    // --- Parcels ---
+    async function loadParcels() {
+        try {
+            const list = await apiJson(state.parcelsUrl, { headers: authHeaders() });
+            state._parcels = Array.isArray(list) ? list : [];
+            renderParcels();
+        } catch (e) {
+            flash('error', 'Nie udało się pobrać paczek. ' + e.message);
+        }
+    }
+
+    function renderParcels() {
+        const q = $('#searchInput').value.toLowerCase();
+        const rows = (state._parcels || []).filter(p => {
+            const d = (p.deliveryAddress || '').toLowerCase();
+            const r = (p.returnAddress || '').toLowerCase();
+            return !q || d.includes(q) || r.includes(q);
+        }).map(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+          <td class="px-4 py-2 text-sm text-slate-700">${p.id ?? '—'}</td>
+          <td class="px-4 py-2 text-sm text-slate-700">${escapeHtml(p.deliveryAddress || '')}</td>
+          <td class="px-4 py-2 text-sm text-slate-700">${escapeHtml(p.returnAddress || '')}</td>
+          <td class="px-4 py-2">
+            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${p.parcelStatus === 'RETURN' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}">
+              ${p.parcelStatus || 'SENT'}
+            </span>
+          </td>
+          <td class="px-4 py-2 text-right">
+            <div class="inline-flex gap-2">
+              <button class="px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50" data-act="qr" data-id="${p.id}">QR</button>
+              <button class="px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50" data-act="status" data-id="${p.id}">Zmień status</button>
+              <button class="px-3 py-1.5 rounded-lg border text-sm hover:bg-rose-50" data-act="del" data-id="${p.id}">Usuń</button>
+            </div>
+          </td>`;
+            return tr;
         });
-        alert("Zmiana statusu: " + res.status);
+        const tbody = $('#parcelsTbody');
+        tbody.innerHTML = '';
+        rows.forEach(r => tbody.appendChild(r));
+        // actions
+        tbody.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', onParcelAction);
+        });
     }
 
-    // 🗑️ Usuń paczkę
-    async function deleteParcel() {
-        const id = document.getElementById("deleteParcelId").value;
-        const res = await fetch(`${apiUrl}/parcels/${id}`, { method: "DELETE" });
-        alert("Usunięcie paczki: " + res.status);
+    function escapeHtml(t) {
+        return t.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
     }
+
+    async function onParcelAction(e) {
+        const id = e.currentTarget.dataset.id;
+        const act = e.currentTarget.dataset.act;
+        if (!id) return;
+        if (act === 'qr') return openQr(id);
+        if (act === 'status') return changeStatus(id);
+        if (act === 'del') return deleteParcel(id);
+    }
+
+    $('#refreshBtn').addEventListener('click', loadParcels);
+    $('#searchInput').addEventListener('input', renderParcels);
+
+    $('#addParcelBtn').addEventListener('click', async () => {
+        const deliveryAddress = $('#deliveryAddress').value.trim();
+        const returnAddress = $('#returnAddress').value.trim();
+        const parcelStatus = $('#parcelStatus').value;
+        if (!deliveryAddress || !returnAddress) return flash('warn', 'Wpisz adres dostawy i zwrotu.');
+        try {
+            const body = JSON.stringify({ deliveryAddress, returnAddress, parcelStatus });
+            const created = await apiJson(state.parcelsUrl, {
+                method: 'POST',
+                headers: authHeaders(),
+                body
+            });
+            flash('ok', 'Paczka dodana.');
+            // reset form
+            $('#deliveryAddress').value = '';
+            $('#returnAddress').value = '';
+            $('#parcelStatus').value = 'SENT';
+            // refresh
+            await loadParcels();
+        } catch (e) {
+            flash('error', 'Nie udało się dodać paczki. ' + e.message);
+        }
+    });
+
+    async function changeStatus(id) {
+        try {
+            await apiJson(`${state.parcelsUrl}/${id}/status`, {
+                method: 'PUT',
+                headers: authHeaders()
+            });
+            flash('ok', `Zmieniono status paczki #${id}.`);
+            await loadParcels();
+        } catch (e) {
+            flash('error', 'Nie udało się zmienić statusu. ' + e.message);
+        }
+    }
+
+    async function deleteParcel(id) {
+        if (!confirm('Na pewno usunąć paczkę?')) return;
+        try {
+            await apiJson(`${state.parcelsUrl}/${id}`, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+            flash('ok', `Usunięto paczkę #${id}.`);
+            await loadParcels();
+        } catch (e) {
+            flash('error', 'Nie udało się usunąć paczki. ' + e.message);
+        }
+    }
+
+    async function openQr(id) {
+        try {
+            const res = await fetch(`${state.parcelsUrl}/${id}/qr`, {
+                headers: authHeaders()
+            });
+            if (!res.ok) throw new Error('Błąd ' + res.status);
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            $('#qrImage').src = url;
+            show($('#qrModal'));
+        } catch (e) {
+            flash('error', 'Nie udało się pobrać QR. ' + e.message);
+        }
+    }
+
+    $('#closeQr').addEventListener('click', () => hide($('#qrModal')));
+    $('#qrModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) hide($('#qrModal')); });
+
+    // If token in localStorage, prefill
+    (function bootstrap() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('returnqr_auth') || 'null');
+            if (saved?.token) {
+                state.token = saved.token;
+                state.tokenType = saved.tokenType || 'Bearer';
+                state.expiresAt = saved.expiresAt || null;
+                state.whoami = saved.whoami || null;
+                $('#apiBase').value = saved.apiBase || '/api';
+                renderAuthedUI();
+                loadParcels();
+            }
+        } catch {}
+    })();
+
+    // Persist token on change
+    const persist = () => {
+        localStorage.setItem('returnqr_auth', JSON.stringify({
+            token: state.token, tokenType: state.tokenType, expiresAt: state.expiresAt,
+            whoami: state.whoami, apiBase: $('#apiBase').value
+        }));
+    };
+    ['loginBtn','logoutBtn','addParcelBtn','refreshBtn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', persist, { capture: true });
+    });
 </script>
 </body>
 </html>

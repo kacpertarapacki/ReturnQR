@@ -1,5 +1,6 @@
 package com.kactar.returnqr.controller;
 import com.kactar.returnqr.dto.UserDto;
+import com.kactar.returnqr.mapper.UserMapper;
 import com.kactar.returnqr.model.Parcel;
 import com.kactar.returnqr.model.User;
 import com.kactar.returnqr.service.ParcelService;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
     private final UserService userService;
     private final ParcelService parcelService;
@@ -26,22 +27,11 @@ public class UserController {
         this.parcelService = parcelService;
     }
 
-//    @PostMapping
-//    public ResponseEntity<User> createUser(@Valid @RequestBody User user){
-//        User savedUser = userService.createNewUser(user);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
-//    }
-
-//    @GetMapping
-//    public ResponseEntity<List<UserDto>> getUsers(){
-//        List<UserDto> users = userService.getAllUsers();
-//        return ResponseEntity.ok(users);
-//    }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUser(@PathVariable Long id){
+    public ResponseEntity<UserDto> getUser(@PathVariable Long id){
         User user = userService.getUserById(id);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(UserMapper.toDto(user));
     }
 
     @DeleteMapping("/{id}")

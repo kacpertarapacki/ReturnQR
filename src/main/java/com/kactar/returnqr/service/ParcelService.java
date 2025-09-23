@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Service
 public class ParcelService {
     private final ParcelRepository parcelRepository;
@@ -17,6 +19,23 @@ public class ParcelService {
     public ParcelService(ParcelRepository parcelRepository, UserRepository userRepository) {
         this.parcelRepository = parcelRepository;
         this.userRepository = userRepository;
+    }
+
+    public List<Parcel> getCurrentUserParcels(User user){
+        return parcelRepository.findByUser(user);
+    }
+
+    public Parcel createParcelForCurrentUser(Parcel parcel, User user){
+        parcel.setUser(user);
+        return parcelRepository.save(parcel);
+    }
+
+    public void deleteParcelForCurrentUser(Long id, User user){
+        Parcel parcel = parcelRepository.findById(id).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parcel not found"));
+        if (!parcel.getUser().getId().equals(user.getId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot delete someone else's parcel!");
+        }
+        parcelRepository.delete(parcel);
     }
 
     public Parcel addParcelToUser(Long id, Parcel parcel){
@@ -30,7 +49,10 @@ public class ParcelService {
     }
 
     public void updateParcelStatus(Long id){
-        parcelRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parcel not found")).setParcelStatus(ParcelStatus.RETURN);
+        Parcel parcel = parcelRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parcel not found"));
+        parcel.setParcelStatus(ParcelStatus.RETURN);
+        parcelRepository.save(parcel);
     }
 
     public void deleteParcel(Long id){
