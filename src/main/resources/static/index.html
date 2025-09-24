@@ -1,442 +1,464 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="en" data-theme="light">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ReturnQR — Panel paczek</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>ReturnQR — Premium Console</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter','system-ui','Segoe UI','Roboto','Arial'] },
+                    colors: {
+                        ice: '#F0F6FC',
+                        sky: '#DBEAFE',
+                        azure: '#93C5FD',
+                        denim: '#3B82F6',
+                        navy: '#1E3A8A',
+                        indigo: '#4338CA',
+                        steel: '#1F2937'
+                    },
+                    boxShadow: {
+                        soft: '0 10px 30px rgba(30,58,138,.08)',
+                        subtle: '0 6px 16px rgba(30,58,138,.06)'
+                    },
+                    keyframes: {
+                        fade: { from: { opacity: 0, transform: 'translateY(6px)' }, to: { opacity: 1, transform: 'translateY(0)' } }
+                    },
+                    animation: { fade: 'fade .35s ease-out both' }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <style>
-        html, body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; }
-        .glass { background: rgba(255,255,255,0.7); backdrop-filter: blur(8px); }
-        .brand-gradient { background-image: linear-gradient(135deg, rgba(59,130,246,1) 0%, rgba(99,102,241,1) 50%, rgba(236,72,153,1) 100%); }
+        :root {
+            --bg: #F0F6FC;
+            --panel: rgba(255,255,255,.75);
+            --border: rgba(30,58,138,.15);
+            --ink: #1E3A8A;
+            --muted: rgba(30,58,138,.65);
+            --ring: rgba(59,130,246,.25);
+            --chip-green: #DBEAFE;
+            --chip-amber: #BFDBFE;
+            --chip-rose: #93C5FD;
+        }
+        [data-theme="dark"] {
+            --bg: #0F172A;
+            --panel: rgba(30,41,59,.6);
+            --border: rgba(255,255,255,.12);
+            --ink: #E0F2FE;
+            --muted: rgba(224,242,254,.70);
+            --ring: rgba(59,130,246,.35);
+            --chip-green: #1E3A8A;
+            --chip-amber: #1E40AF;
+            --chip-rose: #1D4ED8;
+        }
+        html, body { height: 100% }
+        body { background: var(--bg); color: var(--ink); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial }
+        .glass { background: var(--panel); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px) }
+        .bdr { border: 1px solid var(--border) }
+        .muted { color: var(--muted) }
+        .focus-ring { outline: none; box-shadow: 0 0 0 4px var(--ring) }
     </style>
 </head>
-<body class="min-h-screen bg-slate-50">
-<!-- Topbar -->
-<header class="brand-gradient text-white">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h18v2H3V3zm0 4h18v8H3V7zm0 10h18v2H3v-2z"/></svg>
-            <h1 class="text-xl font-semibold tracking-tight">ReturnQR</h1>
-        </div>
-        <div id="userBadge" class="hidden items-center gap-3">
-            <span id="whoami" class="text-sm/6 opacity-90"></span>
-            <button id="logoutBtn" class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-sm font-medium">Wyloguj</button>
-        </div>
-    </div>
-</header>
-
-<!-- Container -->
-<main class="max-w-6xl mx-auto px-4 py-8">
-    <div id="alerts" class="space-y-3"></div>
-
-    <!-- Auth card -->
-    <section id="authCard" class="glass shadow-lg rounded-2xl p-6 mt-6">
-        <h2 class="text-2xl font-semibold mb-1">Zaloguj się</h2>
-        <p class="text-slate-600 mb-6">Użyj danych konta, aby zarządzać paczkami. Nie masz konta? <button class="text-indigo-600 hover:underline" id="switchToRegister">Zarejestruj się</button></p>
-        <div class="grid md:grid-cols-2 gap-6">
-            <!-- Login -->
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Email</label>
-                    <input id="loginEmail" type="email" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="you@example.com"/>
+<body class="min-h-screen">
+<div class="grid grid-cols-12 min-h-screen">
+    <!-- SIDEBAR -->
+    <aside class="col-span-12 md:col-span-3 lg:col-span-2 p-4 md:p-6">
+        <div class="glass bdr rounded-2xl h-full flex flex-col justify-between shadow-subtle">
+            <div>
+                <div class="px-4 pt-5 pb-4 flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-xl flex items-center justify-center text-white shadow-subtle"
+                         style="background: linear-gradient(135deg,#3B82F6 0%,#1E3A8A 100%)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                    </div>
+                    <div>
+                        <div class="text-base font-semibold">ReturnQR</div>
+                        <div class="text-xs muted">Premium Console</div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Hasło</label>
-                    <input id="loginPassword" type="password" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="••••••••"/>
+                <nav class="mt-2 px-2">
+                    <button data-nav="dashboard" class="navbtn w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-sky/60 dark:hover:bg-white/5 transition">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                        <span>Dashboard</span>
+                    </button>
+                    <button data-nav="parcels" class="navbtn mt-1 w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-sky/60 dark:hover:bg-white/5 transition">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M21 8l-9-5-9 5 9 5 9-5zm-9 7l-9-5v7l9 5 9-5v-7l-9 5z"/></svg>
+                        <span>My Parcels</span>
+                    </button>
+                    <button data-nav="admin" id="adminNav" class="hidden mt-1 w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-sky/60 dark:hover:bg-white/5 transition">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        <span>Admin</span>
+                    </button>
+                </nav>
+            </div>
+            <div class="px-4 pb-5 pt-2">
+                <button id="themeToggle" class="px-3 py-2 rounded-xl w-full bdr glass hover:opacity-95 transition flex items-center gap-2 justify-center">
+                    <svg class="h-4 w-4" id="iconLight" viewBox="0 0 24 24" fill="currentColor"><path d="M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.8 1.8-1.8zM1 13h3v-2H1v2zm10 10h2v-3h-2v3zM4.84 20.83l1.79-1.79-1.8-1.8-1.79 1.8 1.8 1.79zM20 13h3v-2h-3v2zm-8-9h2V1h-2v3zm7.66 1.21l-1.8 1.8 1.79 1.79 1.8-1.79-1.79-1.8zM12 6a6 6 0 100 12A6 6 0 0012 6z"/></svg>
+                    <svg class="h-4 w-4 hidden" id="iconDark" viewBox="0 0 24 24" fill="currentColor"><path d="M21.64 13.03A9 9 0 1111 2.36 7 7 0 0021.64 13.03z"/></svg>
+                    <span id="themeLabel" class="text-sm">Dark mode</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <section class="col-span-12 md:col-span-9 lg:col-span-10 p-4 md:p-8 space-y-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <div class="text-2xl font-semibold">Dashboard</div>
+                <div class="muted text-sm" id="subtitle">Welcome to your premium parcel console</div>
+            </div>
+            <div id="userBadge" class="hidden items-center gap-3">
+                <span id="whoami" class="text-sm muted"></span>
+                <button id="logoutBtn" class="px-3 py-2 rounded-xl bg-navy text-white hover:opacity-95 transition shadow-subtle">Logout</button>
+            </div>
+        </div>
+
+        <div id="alerts" class="space-y-3"></div>
+
+        <!-- AUTH -->
+        <div id="authView" class="grid lg:grid-cols-2 gap-6 animate-fade">
+            <div class="glass bdr rounded-2xl p-6 shadow-soft">
+                <div class="text-lg font-semibold mb-4">Sign in</div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Email</label>
+                        <input id="loginEmail" type="email" class="w-full rounded-xl bdr bg-white/70 dark:bg-white/10 px-3 py-2 focus:focus-ring" placeholder="you@example.com"/>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Password</label>
+                        <input id="loginPassword" type="password" class="w-full rounded-xl bdr bg-white/70 dark:bg-white/10 px-3 py-2 focus:focus-ring" placeholder="••••••••"/>
+                    </div>
+                    <button id="loginBtn" class="w-full py-2.5 rounded-xl bg-denim text-white hover:brightness-95 transition shadow-subtle">Login</button>
                 </div>
-                <button id="loginBtn" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Zaloguj</button>
+                <div class="mt-4 text-sm muted">No account? <button class="text-denim font-medium hover:underline" id="switchToRegister">Create one</button></div>
             </div>
 
-            <!-- Register -->
-            <div id="registerPane" class="hidden space-y-4">
-                <div class="grid grid-cols-1 gap-4">
+            <div id="registerPane" class="glass bdr rounded-2xl p-6 shadow-soft hidden">
+                <div class="text-lg font-semibold mb-4">Create account</div>
+                <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Imię (wyświetlane)</label>
-                        <input id="regName" type="text" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="Jan Kowalski"/>
+                        <label class="block text-sm font-medium mb-1">Display name</label>
+                        <input id="regName" type="text" class="w-full rounded-xl bdr bg-white/70 dark:bg-white/10 px-3 py-2 focus:focus-ring" placeholder="John Doe"/>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Email</label>
-                        <input id="regEmail" type="email" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="you@example.com"/>
+                        <input id="regEmail" type="email" class="w-full rounded-xl bdr bg-white/70 dark:bg-white/10 px-3 py-2 focus:focus-ring" placeholder="you@example.com"/>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium mb-1">Hasło</label>
-                        <input id="regPassword" type="password" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="Min. 6 znaków"/>
+                        <label class="block text-sm font-medium mb-1">Password</label>
+                        <input id="regPassword" type="password" class="w-full rounded-xl bdr bg-white/70 dark:bg-white/10 px-3 py-2 focus:focus-ring" placeholder="Min. 6 characters"/>
                     </div>
+                    <button id="registerBtn" class="w-full py-2.5 rounded-xl bg-navy text-white hover:opacity-95 transition shadow-subtle">Create account</button>
                 </div>
-                <button id="registerBtn" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white font-semibold">Utwórz konto</button>
             </div>
         </div>
-        <div class="mt-6">
-            <details class="group">
-                <summary class="cursor-pointer select-none text-sm text-slate-600 hover:text-slate-800 flex items-center gap-2">
-                    <span>Zaawansowane: ustawienia API</span>
-                    <svg class="h-4 w-4 opacity-70 group-open:rotate-180 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.7a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"/></svg>
-                </summary>
-                <div class="mt-3 grid sm:grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-xs font-medium mb-1">Base URL</label>
-                        <input id="apiBase" class="w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500" value="/api"/>
-                        <p class="text-xs text-slate-500 mt-1">Zwykle <code>/api</code></p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium mb-1">Auth Prefix</label>
-                        <input id="authPrefix" class="w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500" value="/auth"/>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium mb-1">Parcels Prefix</label>
-                        <input id="parcelsPrefix" class="w-full rounded-lg border-slate-300 focus:ring-indigo-500 focus:border-indigo-500" value="/parcels"/>
+
+        <!-- APP -->
+        <div id="appView" class="hidden space-y-6 animate-fade">
+            <div class="grid xl:grid-cols-3 gap-6">
+                <!-- add parcel -->
+                <div class="glass bdr rounded-2xl p-6 shadow-soft">
+                    <div class="text-lg font-semibold mb-4">Add parcel</div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Delivery address</label>
+                            <input id="deliveryAddress" class="w-full rounded-xl bdr bg-white/70 dark:bg-white/10 px-3 py-2 focus:focus-ring" placeholder="123 Main St"/>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Return address</label>
+                            <input id="returnAddress" class="w-full rounded-xl bdr bg-white/70 dark:bg-white/10 px-3 py-2 focus:focus-ring" placeholder="456 Return St"/>
+                        </div>
+                        <button id="addParcelBtn" class="w-full py-2.5 rounded-xl bg-denim text-white hover:brightness-95 transition shadow-subtle">Add</button>
                     </div>
                 </div>
-            </details>
-        </div>
-    </section>
 
-    <!-- Dashboard -->
-    <section id="dashboard" class="hidden mt-8 space-y-6">
-        <!-- Actions -->
-        <div class="grid lg:grid-cols-3 gap-6">
-            <div class="glass rounded-2xl p-6 shadow">
-                <h3 class="text-lg font-semibold mb-4">Dodaj paczkę</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Adres dostawy</label>
-                        <input id="deliveryAddress" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="ul. Przykładowa 1, 00-001 Warszawa"/>
+                <!-- my parcels -->
+                <div class="glass bdr rounded-2xl p-6 shadow-soft xl:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="text-lg font-semibold">Your parcels</div>
+                        <div class="flex items-center gap-2">
+                            <input id="searchInput" placeholder="Search address..." class="rounded-lg bdr bg-white/70 dark:bg-white/10 px-3 py-1.5 focus:focus-ring">
+                            <button id="refreshBtn" class="px-3 py-1.5 rounded-lg bg-navy text-white hover:opacity-95 transition shadow-subtle text-sm">Refresh</button>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Adres zwrotu</label>
-                        <input id="returnAddress" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="ul. Zwrotna 2, 00-002 Warszawa"/>
+                    <div class="overflow-hidden rounded-xl bdr">
+                        <table class="min-w-full divide-y" style="border-color: var(--border)">
+                            <thead class="bg-sky/60">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-xs font-semibold muted">ID</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold muted">Delivery</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold muted">Return</th>
+                                <th class="px-4 py-2 text-left text-xs font-semibold muted">Status</th>
+                                <th class="px-4 py-2 text-right text-xs font-semibold muted">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody id="parcelsTbody" class="bg-white/70 dark:bg-white/5 divide-y" style="border-color: var(--border)"></tbody>
+                        </table>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Status</label>
-                        <select id="parcelStatus" class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="SENT">SENT</option>
-                            <option value="RETURN">RETURN</option>
-                        </select>
-                    </div>
-                    <button id="addParcelBtn" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Dodaj</button>
                 </div>
             </div>
 
-            <div class="glass rounded-2xl p-6 shadow lg:col-span-2">
+            <!-- admin panel -->
+            <div id="adminPanel" class="hidden glass bdr rounded-2xl p-6 shadow-soft">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Twoje paczki</h3>
+                    <div class="text-lg font-semibold">Admin — All parcels</div>
                     <div class="flex items-center gap-2">
-                        <input id="searchInput" placeholder="Szukaj adresu..." class="rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 px-3 py-1.5">
-                        <button id="refreshBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-black text-white text-sm">Odśwież</button>
+                        <button id="refreshAdminBtn" class="px-3 py-1.5 rounded-lg bg-denim text-white hover:brightness-95 transition shadow-subtle text-sm">Refresh</button>
                     </div>
                 </div>
-                <div class="overflow-hidden rounded-xl border border-slate-200">
-                    <table class="min-w-full divide-y divide-slate-200">
-                        <thead class="bg-slate-50">
+                <div class="overflow-hidden rounded-xl bdr">
+                    <table class="min-w-full divide-y" style="border-color: var(--border)">
+                        <thead class="bg-sky/60">
                         <tr>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">ID</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">Dostawa</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">Zwrot</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600">Status</th>
-                            <th class="px-4 py-2 text-right text-xs font-semibold text-slate-600">Akcje</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold muted">ID</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold muted">User</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold muted">Delivery</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold muted">Return</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold muted">Status</th>
+                            <th class="px-4 py-2 text-right text-xs font-semibold muted">Actions</th>
                         </tr>
                         </thead>
-                        <tbody id="parcelsTbody" class="divide-y divide-slate-200 bg-white"></tbody>
+                        <tbody id="adminParcelsTbody" class="bg-white/70 dark:bg-white/5 divide-y" style="border-color: var(--border)"></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </section>
-</main>
+</div>
 
-<!-- QR Modal -->
-<div id="qrModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">
-        <button id="closeQr" class="absolute top-3 right-3 p-2 rounded-full hover:bg-slate-100">
+<!-- QR MODAL -->
+<div id="qrModal" class="fixed inset-0 hidden items-center justify-center p-4 z-50" style="background: rgba(0,0,0,.45)">
+    <div class="glass bdr rounded-2xl shadow-soft max-w-md w-full p-6 relative">
+        <button id="closeQr" class="absolute top-3 right-3 p-2 rounded-full hover:bg-white/40 dark:hover:bg-white/20">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M6.4 4.98L4.98 6.4 10.58 12l-5.6 5.6 1.42 1.42L12 13.42l5.6 5.6 1.42-1.42L13.42 12l5.6-5.6-1.42-1.42L12 10.58z"/></svg>
         </button>
-        <h3 class="text-lg font-semibold mb-4">Kod QR paczki</h3>
-        <img id="qrImage" alt="QR" class="w-full rounded-lg border border-slate-200">
+        <h3 class="text-lg font-semibold mb-4">Parcel QR Code</h3>
+        <img id="qrImage" alt="QR" class="w-full rounded-lg bdr">
     </div>
 </div>
 
+<!-- JS -->
 <script>
-    // --- Helpers ---
-    const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => document.querySelectorAll(sel);
+    const $ = (s) => document.querySelector(s);
     const show = (el) => el.classList.remove('hidden');
     const hide = (el) => el.classList.add('hidden');
 
     function flash(type, text) {
-        const color = type === 'error' ? 'bg-rose-100 text-rose-800 border-rose-200' :
-            type === 'warn' ? 'bg-amber-100 text-amber-800 border-amber-200' :
-                'bg-emerald-100 text-emerald-800 border-emerald-200';
+        const color = type === 'error' ? 'bg-red-100 text-red-800 bdr' :
+            type === 'warn' ? 'bg-yellow-100 text-yellow-800 bdr' :
+                'bg-green-100 text-green-800 bdr';
         const box = document.createElement('div');
-        box.className = `rounded-xl border ${color} px-4 py-3`;
+        box.className = `rounded-xl px-4 py-3 ${color}`;
         box.textContent = text;
         $('#alerts').prepend(box);
-        setTimeout(() => box.remove(), 4500);
+        setTimeout(() => box.remove(), 4000);
     }
 
-    // --- API Config ---
     const state = {
         token: null,
         tokenType: 'Bearer',
-        expiresAt: null,
-        base() { return ($('#apiBase').value || '/api').replace(/\/+$/,''); },
-        pathAuth() { return ($('#authPrefix').value || '/auth'); },
-        pathParcels() { return ($('#parcelsPrefix').value || '/parcels'); },
-        get authUrl() { return this.base() + this.pathAuth(); },
-        get parcelsUrl() { return this.base() + this.pathParcels(); },
+        role: null,
         whoami: null,
+        base: '/api',
+        get parcelsUrl() { return this.base + '/parcels'; },
+        get authUrl() { return this.base + '/auth'; }
     };
 
     function authHeaders(extra = {}) {
-        const headers = { 'Content-Type': 'application/json', ...extra };
-        if (state.token) headers['Authorization'] = `${state.tokenType} ${state.token}`;
-        return headers;
+        const h = { 'Content-Type': 'application/json', ...extra };
+        if (state.token) h['Authorization'] = `${state.tokenType} ${state.token}`;
+        return h;
     }
 
     async function apiJson(url, options = {}) {
-        const res = await fetch(url, options);
-        if (!res.ok) {
-            let msg = `Błąd ${res.status}`;
-            try { const j = await res.json(); msg += j.message ? `: ${j.message}` : ''; } catch {}
+        const r = await fetch(url, options);
+        if (!r.ok) {
+            let msg = 'Error ' + r.status;
+            try { const j = await r.json(); msg += j.message ? ': ' + j.message : ''; } catch {}
             throw new Error(msg);
         }
-        const ct = res.headers.get('content-type') || '';
-        return ct.includes('application/json') ? res.json() : res.text();
+        const ct = r.headers.get('content-type') || '';
+        return ct.includes('application/json') ? r.json() : r.text();
     }
 
-    function renderAuthedUI() {
-        hide($('#authCard'));
-        show($('#dashboard'));
+    function renderAuthed() {
+        hide($('#authView'));
+        show($('#appView'));
         show($('#userBadge'));
-        $('#whoami').textContent = state.whoami || 'Zalogowano';
+        $('#whoami').textContent = state.whoami || 'Logged in';
+        if (state.role === 'ADMIN') {
+            show($('#adminNav'));
+            show($('#adminPanel'));      // <-- pokaż panel
+            loadAdminParcels();          // <-- od razu załaduj wszystkie paczki
+        } else {
+            hide($('#adminNav'));
+            hide($('#adminPanel'));
+        }
     }
+
 
     function resetUI() {
-        show($('#authCard'));
-        hide($('#dashboard'));
-        hide($('#userBadge'));
+        show($('#authView')); hide($('#appView')); hide($('#userBadge')); hide($('#adminPanel'));
         $('#whoami').textContent = '';
         $('#parcelsTbody').innerHTML = '';
+        $('#adminParcelsTbody').innerHTML = '';
     }
 
-    // --- Auth ---
-    $('#switchToRegister').addEventListener('click', () => {
-        const pane = $('#registerPane');
-        pane.classList.toggle('hidden');
-    });
+    $('#switchToRegister').onclick = () => $('#registerPane').classList.toggle('hidden');
 
-    $('#loginBtn').addEventListener('click', async () => {
-        const email = $('#loginEmail').value.trim();
-        const password = $('#loginPassword').value;
-        if (!email || !password) return flash('warn', 'Podaj email i hasło.');
+    $('#loginBtn').onclick = async () => {
         try {
-            const body = JSON.stringify({ email, password });
-            const data = await apiJson(`${state.authUrl}/login`, {
+            const d = await apiJson(state.authUrl + '/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body
+                body: JSON.stringify({ email: $('#loginEmail').value, password: $('#loginPassword').value })
             });
-            state.token = data.accessToken || data.token || null;
-            state.tokenType = data.tokenType || 'Bearer';
-            state.expiresAt = data.expiresAt || null;
-            state.whoami = `Rola: ${data.role || 'USER'}`;
-            flash('ok', 'Zalogowano pomyślnie.');
-            renderAuthedUI();
-            await loadParcels();
-        } catch (e) {
-            flash('error', 'Logowanie nieudane. ' + e.message);
-        }
-    });
+            state.token = d.accessToken || d.token; state.role = d.role; state.whoami = "Role: " + state.role;
+            flash('ok', 'Login success'); renderAuthed(); await loadParcels(); if (state.role === 'ADMIN') await loadAdminParcels();
+        } catch (e) { flash('error', 'Login failed ' + e.message); }
+    };
 
-    $('#registerBtn').addEventListener('click', async () => {
-        const name = $('#regName').value.trim();
-        const email = $('#regEmail').value.trim();
-        const password = $('#regPassword').value;
-        if (!name || !email || !password) return flash('warn', 'Wypełnij wszystkie pola rejestracji.');
+    $('#registerBtn').onclick = async () => {
         try {
-            const body = JSON.stringify({ name, email, password });
-            const data = await apiJson(`${state.authUrl}/register`, {
+            await apiJson(state.authUrl + '/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body
+                body: JSON.stringify({ name: $('#regName').value, email: $('#regEmail').value, password: $('#regPassword').value })
             });
-            flash('ok', 'Konto utworzone. Możesz się zalogować.');
-            // Prefill login
-            $('#loginEmail').value = email;
-            hide($('#registerPane'));
-        } catch (e) {
-            flash('error', 'Rejestracja nieudana. ' + e.message);
-        }
-    });
+            flash('ok', 'Account created'); $('#loginEmail').value = $('#regEmail').value; hide($('#registerPane'));
+        } catch (e) { flash('error', 'Register failed'); }
+    };
 
-    $('#logoutBtn').addEventListener('click', () => {
-        state.token = null;
-        state.whoami = null;
-        resetUI();
-        flash('ok', 'Wylogowano.');
-    });
+    $('#logoutBtn').onclick = () => { state.token=null; resetUI(); flash('ok','Logged out'); };
 
-    // --- Parcels ---
     async function loadParcels() {
-        try {
-            const list = await apiJson(state.parcelsUrl, { headers: authHeaders() });
-            state._parcels = Array.isArray(list) ? list : [];
-            renderParcels();
-        } catch (e) {
-            flash('error', 'Nie udało się pobrać paczek. ' + e.message);
-        }
+        try { const l = await apiJson(state.parcelsUrl, { headers: authHeaders() }); state._parcels = l; renderParcels(); }
+        catch (e) { flash('error', 'Failed to load parcels ' + e.message); }
     }
 
     function renderParcels() {
         const q = $('#searchInput').value.toLowerCase();
-        const rows = (state._parcels || []).filter(p => {
-            const d = (p.deliveryAddress || '').toLowerCase();
-            const r = (p.returnAddress || '').toLowerCase();
-            return !q || d.includes(q) || r.includes(q);
-        }).map(p => {
+        const stmap = {CREATED:"Created",LABEL_CREATED:"Label created",SENT:"In transit",DELIVERED:"Delivered",RETURN_REQUESTED:"Return requested",RETURNED:"Returned"};
+        const tb = $('#parcelsTbody'); tb.innerHTML='';
+        (state._parcels||[]).filter(p=>{
+            const d=(p.deliveryAddress||'').toLowerCase(), r=(p.returnAddress||'').toLowerCase();
+            return !q || d.includes(q)||r.includes(q);
+        }).forEach(p=>{
+            const tr=document.createElement('tr');
+            tr.innerHTML=`<td class="px-4 py-2">${p.id}</td>
+      <td class="px-4 py-2">${p.deliveryAddress}</td>
+      <td class="px-4 py-2">${p.returnAddress}</td>
+      <td class="px-4 py-2"><span class="px-2 py-1 rounded-full text-xs bdr" style="background:var(--chip-amber)">${stmap[p.parcelStatus]||p.parcelStatus}</span></td>
+      <td class="px-4 py-2 text-right">
+        <button data-act="qr" data-id="${p.id}" class="px-2 py-1 bdr rounded">QR</button>
+        ${p.parcelStatus==='DELIVERED'?`<button data-act="return" data-id="${p.id}" class="px-2 py-1 bdr rounded">Request return</button>`:''}
+        <button data-act="del" data-id="${p.id}" class="px-2 py-1 bdr rounded">Delete</button>
+      </td>`;
+            tb.appendChild(tr);
+        });
+        tb.querySelectorAll('button').forEach(b=>b.onclick=onParcelAct);
+    }
+
+    async function onParcelAct(e){
+        const id=e.target.dataset.id,act=e.target.dataset.act;
+        if(act==='qr')return openQr(id);
+        if(act==='del')return deleteParcel(id);
+        if(act==='return')return requestReturn(id);
+    }
+
+    $('#refreshBtn').onclick=loadParcels;
+    $('#searchInput').oninput=renderParcels;
+
+    $('#addParcelBtn').onclick=async()=>{
+        const deliveryAddress=$('#deliveryAddress').value.trim(),returnAddress=$('#returnAddress').value.trim();
+        if(!deliveryAddress||!returnAddress)return flash('warn','Enter delivery and return addresses.');
+        try{
+            await apiJson(state.parcelsUrl,{method:'POST',headers:authHeaders(),body:JSON.stringify({deliveryAddress,returnAddress})});
+            flash('ok','Parcel added');$('#deliveryAddress').value='';$('#returnAddress').value='';await loadParcels();
+        }catch(e){flash('error','Could not add parcel '+e.message);}
+    };
+
+    async function deleteParcel(id){await apiJson(state.parcelsUrl+'/'+id,{method:'DELETE',headers:authHeaders()});flash('ok','Deleted '+id);loadParcels();}
+    async function requestReturn(id){await apiJson(state.parcelsUrl+'/'+id+'/return',{method:'PUT',headers:authHeaders()});flash('ok','Return requested for '+id);loadParcels();}
+    async function openQr(id){const r=await fetch(state.parcelsUrl+'/'+id+'/qr',{headers:authHeaders()});if(!r.ok)throw new Error('Error '+r.status);const blob=await r.blob();$('#qrImage').src=URL.createObjectURL(blob);show($('#qrModal'));}
+    $('#closeQr').onclick=()=>hide($('#qrModal'));
+
+    async function loadAdminParcels() {
+        const l = await apiJson(state.base + '/admin/parcels', { headers: authHeaders() });
+        state._admin = l;
+        renderAdmin();
+    }
+
+    function renderAdmin() {
+        const tb = $('#adminParcelsTbody');
+        tb.innerHTML = '';
+        const stmap = {
+            CREATED: "Created",
+            LABEL_CREATED: "Label created",
+            SENT: "In transit",
+            DELIVERED: "Delivered",
+            RETURN_REQUESTED: "Return requested",
+            RETURNED: "Returned"
+        };
+
+        (state._admin || []).forEach(p => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-          <td class="px-4 py-2 text-sm text-slate-700">${p.id ?? '—'}</td>
-          <td class="px-4 py-2 text-sm text-slate-700">${escapeHtml(p.deliveryAddress || '')}</td>
-          <td class="px-4 py-2 text-sm text-slate-700">${escapeHtml(p.returnAddress || '')}</td>
-          <td class="px-4 py-2">
-            <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${p.parcelStatus === 'RETURN' ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}">
-              ${p.parcelStatus || 'SENT'}
-            </span>
-          </td>
-          <td class="px-4 py-2 text-right">
-            <div class="inline-flex gap-2">
-              <button class="px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50" data-act="qr" data-id="${p.id}">QR</button>
-              <button class="px-3 py-1.5 rounded-lg border text-sm hover:bg-slate-50" data-act="status" data-id="${p.id}">Zmień status</button>
-              <button class="px-3 py-1.5 rounded-lg border text-sm hover:bg-rose-50" data-act="del" data-id="${p.id}">Usuń</button>
-            </div>
-          </td>`;
-            return tr;
+      <td class="px-4 py-2">${p.id}</td>
+      <td class="px-4 py-2">${p.user?.email || p.userEmail || '—'}</td>
+      <td class="px-4 py-2">${p.deliveryAddress || ''}</td>
+      <td class="px-4 py-2">${p.returnAddress || ''}</td>
+      <td class="px-4 py-2">
+        <select data-id="${p.id}"
+          class="rounded-lg bdr px-2 py-1 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+          ${Object.keys(stmap).map(k =>
+                `<option value="${k}" ${p.parcelStatus===k?'selected':''}>${stmap[k]}</option>`
+            ).join('')}
+        </select>
+      </td>
+      <td class="px-4 py-2 text-right">
+        <button data-act="save" data-id="${p.id}"
+          class="px-3 py-1.5 rounded-lg bg-denim text-white hover:brightness-95 text-sm">Save</button>
+      </td>`;
+            tb.appendChild(tr);
         });
-        const tbody = $('#parcelsTbody');
-        tbody.innerHTML = '';
-        rows.forEach(r => tbody.appendChild(r));
-        // actions
-        tbody.querySelectorAll('button').forEach(btn => {
-            btn.addEventListener('click', onParcelAction);
+
+        tb.querySelectorAll('button[data-act="save"]').forEach(btn => {
+            btn.onclick = async () => {
+                const id = btn.dataset.id;
+                const sel = tb.querySelector(`select[data-id="${id}"]`);
+                const newStatus = sel.value;
+                try {
+                    await apiJson(state.base + `/admin/parcels/${id}/status`, {
+                        method: 'PUT',
+                        headers: authHeaders(),
+                        body: JSON.stringify(newStatus)
+                    });
+                    flash('ok', `Changed parcel #${id} status to ${newStatus}`);
+                    loadAdminParcels();
+                } catch(e) {
+                    flash('error', 'Failed to change status: ' + e.message);
+                }
+            };
         });
     }
 
-    function escapeHtml(t) {
-        return t.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-    }
+    $('#refreshAdminBtn').onclick = loadAdminParcels;
 
-    async function onParcelAction(e) {
-        const id = e.currentTarget.dataset.id;
-        const act = e.currentTarget.dataset.act;
-        if (!id) return;
-        if (act === 'qr') return openQr(id);
-        if (act === 'status') return changeStatus(id);
-        if (act === 'del') return deleteParcel(id);
-    }
-
-    $('#refreshBtn').addEventListener('click', loadParcels);
-    $('#searchInput').addEventListener('input', renderParcels);
-
-    $('#addParcelBtn').addEventListener('click', async () => {
-        const deliveryAddress = $('#deliveryAddress').value.trim();
-        const returnAddress = $('#returnAddress').value.trim();
-        const parcelStatus = $('#parcelStatus').value;
-        if (!deliveryAddress || !returnAddress) return flash('warn', 'Wpisz adres dostawy i zwrotu.');
-        try {
-            const body = JSON.stringify({ deliveryAddress, returnAddress, parcelStatus });
-            const created = await apiJson(state.parcelsUrl, {
-                method: 'POST',
-                headers: authHeaders(),
-                body
-            });
-            flash('ok', 'Paczka dodana.');
-            // reset form
-            $('#deliveryAddress').value = '';
-            $('#returnAddress').value = '';
-            $('#parcelStatus').value = 'SENT';
-            // refresh
-            await loadParcels();
-        } catch (e) {
-            flash('error', 'Nie udało się dodać paczki. ' + e.message);
-        }
-    });
-
-    async function changeStatus(id) {
-        try {
-            await apiJson(`${state.parcelsUrl}/${id}/status`, {
-                method: 'PUT',
-                headers: authHeaders()
-            });
-            flash('ok', `Zmieniono status paczki #${id}.`);
-            await loadParcels();
-        } catch (e) {
-            flash('error', 'Nie udało się zmienić statusu. ' + e.message);
-        }
-    }
-
-    async function deleteParcel(id) {
-        if (!confirm('Na pewno usunąć paczkę?')) return;
-        try {
-            await apiJson(`${state.parcelsUrl}/${id}`, {
-                method: 'DELETE',
-                headers: authHeaders()
-            });
-            flash('ok', `Usunięto paczkę #${id}.`);
-            await loadParcels();
-        } catch (e) {
-            flash('error', 'Nie udało się usunąć paczki. ' + e.message);
-        }
-    }
-
-    async function openQr(id) {
-        try {
-            const res = await fetch(`${state.parcelsUrl}/${id}/qr`, {
-                headers: authHeaders()
-            });
-            if (!res.ok) throw new Error('Błąd ' + res.status);
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            $('#qrImage').src = url;
-            show($('#qrModal'));
-        } catch (e) {
-            flash('error', 'Nie udało się pobrać QR. ' + e.message);
-        }
-    }
-
-    $('#closeQr').addEventListener('click', () => hide($('#qrModal')));
-    $('#qrModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) hide($('#qrModal')); });
-
-    // If token in localStorage, prefill
-    (function bootstrap() {
-        try {
-            const saved = JSON.parse(localStorage.getItem('returnqr_auth') || 'null');
-            if (saved?.token) {
-                state.token = saved.token;
-                state.tokenType = saved.tokenType || 'Bearer';
-                state.expiresAt = saved.expiresAt || null;
-                state.whoami = saved.whoami || null;
-                $('#apiBase').value = saved.apiBase || '/api';
-                renderAuthedUI();
-                loadParcels();
-            }
-        } catch {}
-    })();
-
-    // Persist token on change
-    const persist = () => {
-        localStorage.setItem('returnqr_auth', JSON.stringify({
-            token: state.token, tokenType: state.tokenType, expiresAt: state.expiresAt,
-            whoami: state.whoami, apiBase: $('#apiBase').value
-        }));
+    // Theme toggle
+    $('#themeToggle').onclick = () => {
+        const d = document.documentElement;
+        const dark = d.getAttribute('data-theme') === 'dark';
+        d.setAttribute('data-theme', dark ? 'light' : 'dark');
+        $('#iconLight').classList.toggle('hidden', !dark);
+        $('#iconDark').classList.toggle('hidden', dark);
     };
-    ['loginBtn','logoutBtn','addParcelBtn','refreshBtn'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('click', persist, { capture: true });
-    });
 </script>
 </body>
 </html>

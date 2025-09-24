@@ -8,12 +8,10 @@ import com.kactar.returnqr.repository.ParcelRepository;
 import com.kactar.returnqr.service.ParcelService;
 import com.kactar.returnqr.service.QrCodeService;
 import com.kactar.returnqr.service.UserService;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,7 +23,7 @@ public class ParcelController {
     private final QrCodeService qrCodeService;
     private final UserService userService;
 
-    public ParcelController(ParcelService parcelService, QrCodeService qrCodeService, UserService userService, ParcelRepository parcelRepository, ParcelRepository parcelRepository1) {
+    public ParcelController(ParcelService parcelService, QrCodeService qrCodeService, UserService userService) {
         this.parcelService = parcelService;
         this.qrCodeService = qrCodeService;
         this.userService = userService;
@@ -62,9 +60,9 @@ public class ParcelController {
         return ResponseEntity.ok(parcel);
     }
 
-    @PutMapping("/{id}/status")
-    public ResponseEntity<Void> changeStatus(@PathVariable Long id){
-        parcelService.updateParcelStatus(id);
+    @PutMapping("/{id}/return")
+    public ResponseEntity<Void> createReturn(@PathVariable Long id){
+        parcelService.createReturn(id);
         return ResponseEntity.noContent().build();
     }
 

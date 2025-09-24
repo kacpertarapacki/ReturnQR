@@ -1,5 +1,7 @@
 package com.kactar.returnqr.service;
 
+import com.kactar.returnqr.dto.ParcelDto;
+import com.kactar.returnqr.mapper.ParcelMapper;
 import com.kactar.returnqr.model.Parcel;
 import com.kactar.returnqr.model.ParcelStatus;
 import com.kactar.returnqr.model.User;
@@ -15,10 +17,12 @@ import java.util.List;
 public class ParcelService {
     private final ParcelRepository parcelRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
-    public ParcelService(ParcelRepository parcelRepository, UserRepository userRepository) {
+    public ParcelService(ParcelRepository parcelRepository, UserRepository userRepository, EmailService emailService) {
         this.parcelRepository = parcelRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     public List<Parcel> getCurrentUserParcels(User user){
@@ -27,8 +31,10 @@ public class ParcelService {
 
     public Parcel createParcelForCurrentUser(Parcel parcel, User user){
         parcel.setUser(user);
+        parcel.setParcelStatus(ParcelStatus.LABEL_CREATED);
         return parcelRepository.save(parcel);
     }
+
 
     public void deleteParcelForCurrentUser(Long id, User user){
         Parcel parcel = parcelRepository.findById(id).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parcel not found"));
@@ -48,12 +54,35 @@ public class ParcelService {
         return parcelRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parcel not found"));
     }
 
-    public void updateParcelStatus(Long id){
+    public void createReturn(Long id){
         Parcel parcel = parcelRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parcel not found"));
-        parcel.setParcelStatus(ParcelStatus.RETURN);
+        if (parcel.getParcelStatus() != ParcelStatus.DELIVERED){
+            System.out.println("Current status: " + parcel.getParcelStatus());
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User not allowed to change status");
+        }
+        parcel.setParcelStatus(ParcelStatus.RETURN_REQUESTED);
         parcelRepository.save(parcel);
     }
+
+    public List<ParcelDto> getAllParcels(){
+        return parcelRepository.findAll()
+                .stream().map(ParcelMapper::toDto).toList();
+    }
+
+    public ParcelDto setStatusAsAdmin(Long id, ParcelStatus parcelStatus){
+        Parcel parcel = parcelRepository.findById(id)
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parcel not found"));
+        parcel.setParcelStatus(parcelStatus);
+        Parcel saved = parcelRepository.save(parcel);
+        if (saved.getUser() != null && saved.getUser().getEmail() != null && !saved.getUser().getEmail().isBlank()) {
+            emailService.sendParcelStatusEmail(saved.getUser().getEmail(), saved);
+        }
+
+        return ParcelMapper.toDto(parcelRepository.save(parcel));
+    }
+
+
 
     public void deleteParcel(Long id){
         if (!parcelRepository.existsById(id)){

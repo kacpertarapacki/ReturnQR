@@ -1,6 +1,9 @@
 package com.kactar.returnqr.model;
 
 public enum ParcelStatus {
+    LABEL_CREATED,
     SENT,
-    RETURN
+    DELIVERED,
+    RETURN_REQUESTED,
+    RETURNED
 }
