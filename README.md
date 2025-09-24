@@ -125,7 +125,6 @@ This starts:
 
 ## 📸 Screenshots
 
-> Add your own screenshots to the `docs/` folder and link them here.
 
 - **Login/Register**  
   ![Login](docs/login.png)
